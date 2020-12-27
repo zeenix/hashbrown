@@ -951,9 +951,10 @@ where
     /// assert_eq!(map.get(&2), None);
     /// ```
     #[inline]
-    pub fn get<Q: ?Sized>(&self, k: &Q) -> Option<&V>
+    pub fn get<'key, 'map, 'value, Q: ?Sized>(&'map self, k: &'key Q) -> Option<&'value V>
     where
-        K: Borrow<Q>,
+        'value: 'map,
+        K: 'value + Borrow<Q>,
         Q: Hash + Eq,
     {
         // Avoid `Option::map` because it bloats LLVM IR.
@@ -996,8 +997,10 @@ where
     }
 
     #[inline]
-    fn get_inner<Q: ?Sized>(&self, k: &Q) -> Option<&(K, V)>
+    fn get_inner<'key, 'map, 'value, Q: ?Sized>(&'map self, k: &'key Q) -> Option<&'value (K, V)>
     where
+        'value: 'map,
+        K: 'value,
         K: Borrow<Q>,
         Q: Hash + Eq,
     {

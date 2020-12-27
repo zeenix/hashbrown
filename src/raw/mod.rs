@@ -1061,7 +1061,7 @@ impl<T, A: Allocator + Clone> RawTable<T, A> {
 
     /// Searches for an element in the table.
     #[inline]
-    pub fn find(&self, hash: u64, mut eq: impl FnMut(&T) -> bool) -> Option<Bucket<T>> {
+    pub fn find<'table, 'f, 'out>(&'table self, hash: u64, mut eq: impl FnMut(&'f T) -> bool) -> Option<Bucket<T>> {
         unsafe {
             for bucket in self.iter_hash(hash) {
                 let elm = bucket.as_ref();
@@ -1075,7 +1075,10 @@ impl<T, A: Allocator + Clone> RawTable<T, A> {
 
     /// Gets a reference to an element in the table.
     #[inline]
-    pub fn get(&self, hash: u64, eq: impl FnMut(&T) -> bool) -> Option<&T> {
+    pub fn get<'table, 'f, 'out>(&'table self, hash: u64, eq: impl FnMut(&'f T) -> bool) -> Option<&'out T>
+    where
+        'out: 'table,
+    {
         // Avoid `Option::map` because it bloats LLVM IR.
         match self.find(hash, eq) {
             Some(bucket) => Some(unsafe { bucket.as_ref() }),
